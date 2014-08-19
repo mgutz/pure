@@ -49,15 +49,17 @@ prompt_pure_git_dirty() {
 }
 
 prompt_pure_git_async_info() {
+	(( ${PURE_GIT_PULL:-1} )) || return
+
 	local prompt_pure_preprompt="$1"
-	local orig_pwd="$2"
+	local orig_pwd="$PWD"
+	local pid=$$
 
 	# save working directory for async check
-	local pid=$$
-	echo $PWD > /tmp/$pid.pwd
+	echo $orig_pwd > /tmp/$pid.pwd
 
 	# check async if there is anything to pull
-	(( ${PURE_GIT_PULL:-1} )) && {
+	{
 		# check check if there is anything to pull
 		command git fetch &>/dev/null &&
 		# check if there is an upstream configured for this branch
@@ -79,13 +81,6 @@ prompt_pure_git_async_info() {
 		}
 	} &!
 }
-
-
-# string length ignoring ansi escapes
-prompt_pure_string_length() {
-	echo ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}}
-}
-
 
 prompt_pure_hg_dirty() {
 	# Grep exits with 0 when "One or more lines were selected", return "dirty".
@@ -122,11 +117,11 @@ prompt_pure_precmd() {
 	local vcs_prompt=""
 	local prompt_pure_preprompt=""
 
-	if [[ -d .git ]] || command git rev-parse --is-inside-work-tree &>/dev/null; then
+	if [[ -e .git ]] || command git rev-parse --is-inside-work-tree &>/dev/null; then
 		prompt_pure_git_dirty && vcs_prompt="${prompt_pure_error_color}${vcs_info_msg_0_}*" || vcs_prompt="${prompt_pure_ok_color}${vcs_info_msg_0_}"
 		prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
-		prompt_pure_git_async_info $prompt_pure_preprompt $PWD
-	elif [[ -d .hg ]] || command hg summary > /dev/null 2>&1; then
+		prompt_pure_git_async_info $prompt_pure_preprompt
+	elif [[ -e .hg ]] || command hg summary > /dev/null 2>&1; then
 		prompt_pure_hg_dirty && vcs_prompt="${prompt_pure_error_color}${vcs_info_msg_0_}*" || vcs_prompt="${prompt_pure_ok_color}${vcs_info_msg_0_}"
 	fi
 
