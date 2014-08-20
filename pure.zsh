@@ -19,9 +19,12 @@
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
 
-prompt_pure_ok_color="$fg_bold[green]"
-prompt_pure_error_color="$fg_bold[red]"
-prompt_pure_dir_color="$fg_bold[cyan]"
+# prompt_pure_ok_color="$fg_bold[green]"
+# prompt_pure_error_color="$fg_bold[red]"
+# prompt_pure_dir_color="$fg_bold[cyan]"
+prompt_pure_ok_color="%F{green}"
+prompt_pure_error_color="%F{red}"
+prompt_pure_dir_color="%F{cyan}"
 #prompt_pure_prompt_char="❯"
 prompt_pure_prompt_char="›"
 prompt_pure_current_dir=""
@@ -77,7 +80,7 @@ prompt_pure_git_async_info() {
 			# \e2A - go up two lines (prompt starts with \n which adds extra line)
 			# %f - reset colors
 			# \e8 - restore cursor position
-			print -Pn "\e7\e[2A${prompt_pure_preprompt}${prompt_pure_error_color}${arrows}%f\e8"
+			print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length ${prompt_pure_preprompt}`C${prompt_pure_error_color}${arrows}%f\e8"
 		}
 	} &!
 }
@@ -119,13 +122,15 @@ prompt_pure_precmd() {
 
 	if [[ -e .git ]] || command git rev-parse --is-inside-work-tree &>/dev/null; then
 		prompt_pure_git_dirty && vcs_prompt="${prompt_pure_error_color}${vcs_info_msg_0_}*" || vcs_prompt="${prompt_pure_ok_color}${vcs_info_msg_0_}"
-		prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
+		#prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
+		prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}%f"
 		prompt_pure_git_async_info $prompt_pure_preprompt
 	elif [[ -e .hg ]] || command hg summary > /dev/null 2>&1; then
 		prompt_pure_hg_dirty && vcs_prompt="${prompt_pure_error_color}${vcs_info_msg_0_}*" || vcs_prompt="${prompt_pure_ok_color}${vcs_info_msg_0_}"
 	fi
 
-	[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
+	#[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
+	[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}%f"
 	print -P $prompt_pure_preprompt
 
 	# reset value since `preexec` isn't always triggered
@@ -161,5 +166,11 @@ prompt_pure_setup() {
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT='%(?.$prompt_pure_ok_color.$prompt_pure_error_color)${prompt_pure_prompt_char}%f '
 }
+
+# string length ignoring ansi escapes
+prompt_pure_string_length() {
+	echo ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}}
+}
+
 
 prompt_pure_setup "$@"
