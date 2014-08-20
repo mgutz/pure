@@ -26,15 +26,28 @@ prompt_pure_color_codes() {
 
 prompt_pure_colorscheme="stoplight"
 
-if [[ "$prompt_pure_colorscheme" = "stoplight" ]]; then
+if test "$prompt_pure_colorscheme" = "stoplight"; then
+	# vcs branch
+	prompt_pure_clean_color="%F{10}"        # bright green
+	# vcs branch
+	prompt_pure_dirty_color="%F{9}"         # bright red
+	prompt_pure_dir_color="%F{14}"          # bright cyan
+	prompt_pure_user_color="%F{8}"          # bright black
+	#prompt_pure_prompt_char="❯"
+	prompt_pure_prompt_ok="%F{10}›" 	# bright green
+	prompt_pure_prompt_error="%F{9}›"       # bright red
+	prompt_pure_behind_char="%F{11}⇣"
+	prompt_pure_ahead_char="%F{11}⇡"
+	prompt_pure_dirty_char="%F{9} ∆"        # bright red
+elif test "$prompt_pure_colorscheme" = "pi"; then
 	# vcs branch
 	prompt_pure_clean_color="%F{10}"        # bright green
 	# vcs branch
 	prompt_pure_dirty_color="%F{9}"         # bright red
 	prompt_pure_dir_color="%F{14}"          # bright cyan
 	#prompt_pure_prompt_char="❯"
-	prompt_pure_prompt_ok="%F{10}›" 	# bright green
-	prompt_pure_prompt_error="%F{9}›"       # bright red
+	prompt_pure_prompt_ok="%F{10}•›" 	# bright green
+	prompt_pure_prompt_error="%F{9}•›"       # bright red
 	prompt_pure_behind_char="%F{11}⇣"
 	prompt_pure_ahead_char="%F{11}⇡"
 	prompt_pure_dirty_char="%F{9} ∆"        # bright red
@@ -135,13 +148,13 @@ prompt_pure_precmd() {
 	if [[ -e .git ]] || command git rev-parse --is-inside-work-tree &>/dev/null; then
 		prompt_pure_git_dirty && vcs_prompt="${prompt_pure_dirty_color}${vcs_info_msg_0_}${prompt_pure_dirty_char}" || vcs_prompt="${prompt_pure_clean_color}${vcs_info_msg_0_}"
 		#prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_dirty_color}`prompt_pure_cmd_exec_time`%f"
-		prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_dirty_color}%f"
+		prompt_pure_preprompt="\n${prompt_pure_user_color}$prompt_pure_username${prompt_pure_dir_color}${short_dir}${vcs_prompt}%f"
 		prompt_pure_git_async_info $prompt_pure_preprompt
 	elif [[ -e .hg ]] || command hg summary > /dev/null 2>&1; then
 		prompt_pure_hg_dirty && vcs_prompt="${prompt_pure_dirty_color}${vcs_info_msg_0_}${prompt_pure_dirty_char}" || vcs_prompt="${prompt_pure_clean_color}${vcs_info_msg_0_}"
 	fi
 
-	[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_dirty_color}`prompt_pure_cmd_exec_time`%f"
+	[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_user_color}$prompt_pure_username${prompt_pure_dir_color}${short_dir}${vcs_prompt}%f"
 	print -P $prompt_pure_preprompt
 
 	# reset value since `preexec` isn't always triggered
