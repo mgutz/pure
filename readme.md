@@ -4,40 +4,20 @@
 
 ![screenshot](screenshot.png)
 
-## Differences from Original
-
-- Mercurial support
-- Smarter async will not change status if working directory changed
-- Parameterized colors
-
-## Overview
-
-Most prompts are cluttered, ugly and slow. I wanted something visually pleasing that stayed out of my way.
-
 ### Why?
 
-- Comes with the perfect prompt character.
-  Author went through the whole Unicode range to find it.
-- Shows `git` branch and whether it's dirty (with a `*`).
-- Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
-- Prompt character turns red if the last command didn't exit with `0`.
+- Shows `git`, `hg` branch and whether it's dirty (`∆`).
+- Indicates when you have unpushed (`⇡`) unpulled (`⇣`) `git` commits.
+- Prompt character (`›`) turns red if the last command didn't exit with `0`.
 - Command execution time will be displayed if it exceeds the set threshold.
 - Username and host only displayed when in an SSH session.
 - Shows the current path in the title and the [current folder & command](screenshot-title-cmd.png) when a process is running.
 - Makes an excellent starting point for your own custom prompt.
-
+- Mercurial support
+- Smarter async will not change status if working directory changed
+- Colorschemes
 
 ## Install
-
-Can be installed with `npm` or manually.
-
-### npm
-
-```sh
-$ npm install --global pure-prompt
-```
-
-That's it. Skip to [Getting started](#getting-started).
 
 ### Manually
 
@@ -79,7 +59,6 @@ autoload -U promptinit && promptinit
 prompt pure
 ```
 
-
 ## Options
 
 ### `PURE_CMD_MAX_EXEC_TIME`
@@ -107,14 +86,6 @@ PURE_CMD_MAX_EXEC_TIME=10
 prompt pure
 ```
 
-
-## Tips
-
-[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above. Just make sure you have anti-aliasing enabled in your Terminal.
-
-To have commands colorized as seen in the screenshot install [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting).
-
-
 ## Integration
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
@@ -127,7 +98,7 @@ Symlink (or copy) `pure.zsh` to `~/.zprezto/modules/prompt/functions/prompt_pure
 
 ### [antigen](https://github.com/zsh-users/antigen)
 
-Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `antigen theme` function).
+Add `antigen bundle mgutz/pure` to your .zshrc file (do not use the `antigen theme` function).
 
 
 ## License
