@@ -10,8 +10,6 @@
 # %s => current source cli (git, hg...)
 # prompt:
 # %F => color dict
-# $fg[color] => foreground color
-# $fg_bold[color] => bold color
 # %f => reset color
 # %~ => current path
 # %* => time
@@ -19,15 +17,28 @@
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
 
-# prompt_pure_ok_color="$fg_bold[green]"
-# prompt_pure_error_color="$fg_bold[red]"
-# prompt_pure_dir_color="$fg_bold[cyan]"
-prompt_pure_ok_color="%F{green}"
-prompt_pure_error_color="%F{red}"
-prompt_pure_dir_color="%F{cyan}"
-#prompt_pure_prompt_char="❯"
-prompt_pure_prompt_char="›"
-prompt_pure_current_dir=""
+# print all color codes for %F{}
+prompt_pure_color_codes() {
+	for code in {0..255}; do
+		echo -e "\e[38;05;${code}m $code: hello"
+	done
+}
+
+prompt_pure_colorscheme="stoplight"
+
+if [[ "$prompt_pure_colorscheme" = "stoplight" ]]; then
+	# vcs branch
+	prompt_pure_clean_color="%F{10}"        # bright green
+	# vcs branch
+	prompt_pure_dirty_color="%F{9}"         # bright red
+	prompt_pure_dir_color="%F{14}"          # bright cyan
+	#prompt_pure_prompt_char="❯"
+	prompt_pure_prompt_ok="%F{10}›" 	# bright green
+	prompt_pure_prompt_error="%F{9}›"       # bright red
+	prompt_pure_behind_char="%F{11}⇣"
+	prompt_pure_ahead_char="%F{11}⇡"
+	prompt_pure_dirty_char="%F{9} ∆"        # bright red
+fi
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
@@ -68,8 +79,8 @@ prompt_pure_git_async_info() {
 		# check if there is an upstream configured for this branch
 		command git rev-parse --abbrev-ref @'{u}' &>/dev/null && {
 			local arrows=''
-			(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
-			(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
+			(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows=$prompt_pure_behind_char
+			(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+=$prompt_pure_ahead_char
 
 			# return if working directory changed before this finished
 			local current_pwd=$(</tmp/$pid.pwd)
@@ -80,7 +91,8 @@ prompt_pure_git_async_info() {
 			# \e2A - go up two lines (prompt starts with \n which adds extra line)
 			# %f - reset colors
 			# \e8 - restore cursor position
-			print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length ${prompt_pure_preprompt}`C${prompt_pure_error_color}${arrows}%f\e8"
+			local length=$(prompt_pure_string_length $prompt_pure_preprompt)
+			print -Pn "\e7\e[A\e[1G\e[${length}C${prompt_pure_dirty_color}${arrows}%f\e8"
 		}
 	} &!
 }
@@ -121,16 +133,15 @@ prompt_pure_precmd() {
 	local prompt_pure_preprompt=""
 
 	if [[ -e .git ]] || command git rev-parse --is-inside-work-tree &>/dev/null; then
-		prompt_pure_git_dirty && vcs_prompt="${prompt_pure_error_color}${vcs_info_msg_0_}*" || vcs_prompt="${prompt_pure_ok_color}${vcs_info_msg_0_}"
-		#prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
-		prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}%f"
+		prompt_pure_git_dirty && vcs_prompt="${prompt_pure_dirty_color}${vcs_info_msg_0_}${prompt_pure_dirty_char}" || vcs_prompt="${prompt_pure_clean_color}${vcs_info_msg_0_}"
+		#prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_dirty_color}`prompt_pure_cmd_exec_time`%f"
+		prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_dirty_color}%f"
 		prompt_pure_git_async_info $prompt_pure_preprompt
 	elif [[ -e .hg ]] || command hg summary > /dev/null 2>&1; then
-		prompt_pure_hg_dirty && vcs_prompt="${prompt_pure_error_color}${vcs_info_msg_0_}*" || vcs_prompt="${prompt_pure_ok_color}${vcs_info_msg_0_}"
+		prompt_pure_hg_dirty && vcs_prompt="${prompt_pure_dirty_color}${vcs_info_msg_0_}${prompt_pure_dirty_char}" || vcs_prompt="${prompt_pure_clean_color}${vcs_info_msg_0_}"
 	fi
 
-	#[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}`prompt_pure_cmd_exec_time`%f"
-	[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_error_color}%f"
+	[[ -z "$prompt_pure_preprompt" ]] && prompt_pure_preprompt="\n${prompt_pure_dir_color}${short_dir}${vcs_prompt} $prompt_pure_username%f ${prompt_pure_dirty_color}`prompt_pure_cmd_exec_time`%f"
 	print -P $prompt_pure_preprompt
 
 	# reset value since `preexec` isn't always triggered
@@ -159,18 +170,19 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:hg*' formats ' %s:%b'
 	zstyle ':vcs_info:hg*' actionformats ' %s:%b|%a'
 
-
 	# show username@host if logged in through SSH
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%n@%m '
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT='%(?.$prompt_pure_ok_color.$prompt_pure_error_color)${prompt_pure_prompt_char}%f '
+	PROMPT='%(?.$prompt_pure_prompt_ok.$prompt_pure_prompt_error)%f '
 }
 
 # string length ignoring ansi escapes
 prompt_pure_string_length() {
-	echo ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}}
+	local line=${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}
+	# trim trailing spaces
+	line="${line%"${line##*[![:space:]]}"}"
+	echo $((${#line} - 1))
 }
-
 
 prompt_pure_setup "$@"
